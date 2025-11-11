@@ -91,18 +91,18 @@ else
     echo "spidev does not exist"
     
 #    lsmod | grep spi_bcm2708 >& /dev/null
-	lsmod | grep spi_bcm2835 >& /dev/null
+        lsmod | grep -E 'spi_(bcm2835|rp1)' >& /dev/null
 
     if [ $? -ne 0 ]; then
-	echo "SPI driver not loaded, try to load it..."
-	modprobe spi_bcm2835
-
-	if [ $? -eq 0 ]; then
-	    echo "OK: SPI driver loaded"
-	else
-	    echo "Could not load SPI driver"
-	    exit 1
-	fi  
+        echo "SPI driver not loaded, try to load it..."
+        if modprobe spi_rp1 2>/dev/null; then
+            echo "OK: SPI driver loaded (spi_rp1)"
+        elif modprobe spi_bcm2835 2>/dev/null; then
+            echo "OK: SPI driver loaded (spi_bcm2835)"
+        else
+            echo "Could not load SPI driver"
+            exit 1
+        fi
     fi
 fi
 

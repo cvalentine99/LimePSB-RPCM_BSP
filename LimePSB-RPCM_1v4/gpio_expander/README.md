@@ -2,6 +2,8 @@
 
 LimePSB RPCM v1.4 board features two GPIO expanders (MCP23017) controlled via I2C bus (addresses 0x20 and 0x21). GPIO expander controls LEDs, enable signals for PAs and LNAs, few other signals.
 
+**Note:** This is compatible with both Raspberry Pi CM4 (BCM2711) and CM5 (BCM2712). The device tree overlay and shell scripts include support for both SoC variants.
+
 ## Installation
 
 Raspbian OS provides driver for MCP23017 GPIO expander. To enable it add this line to the /boot/firmware/config.txt file:
@@ -10,14 +12,22 @@ Raspbian OS provides driver for MCP23017 GPIO expander. To enable it add this li
 dtoverlay=mcp23017,noints,i2c_csi_dsi
 ```
 
-After reboot GPIO expander may be detected using gpiodetect command. There should be the following lines (or similar) in the output
+After reboot GPIO expander may be detected using gpiodetect command. There should be the following lines (or similar) in the output.
 
+For Raspberry Pi CM4:
 ```
 gpiochip0 [pinctrl-bcm2711] (58 lines)
 gpiochip1 [raspberrypi-exp-gpio] (8 lines)
 gpiochip2 [mcp23017] (16 lines)
 gpiochip3 [mcp23017] (16 lines)
-gpiochip0 [pinctrl-bcm2711] (58 lines)
+```
+
+For Raspberry Pi CM5:
+```
+gpiochip0 [pinctrl-rp1] (54 lines)
+gpiochip1 [raspberrypi-exp-gpio] (8 lines)
+gpiochip2 [mcp23017] (16 lines)
+gpiochip3 [mcp23017] (16 lines)
 ```
 
 Our GPIO expander is gpiochip2. Using gpioinfo command it is possible to see the GPIOs:

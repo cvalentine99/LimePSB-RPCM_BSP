@@ -2,6 +2,8 @@
 
 LimePSB RPCM v1.4 board features on board FPGA (Lattice ICE5LP4K). It has to be configured at system startup to allow additional functions of the on board infrastructure to be controlled.
 
+**Note:** This is compatible with both Raspberry Pi CM4 (BCM2711) and CM5 (BCM2712). The configuration script automatically detects and loads the appropriate SPI driver (spi_bcm2835 for CM4 or spi_rp1 for CM5).
+
 ## Prerequisites
 
 It requires GPIO expander driver and spi-tools to be installed. To install spi-tools use this [repository](https://github.com/cpb-/spi-tools) and follow instructions.

@@ -1,6 +1,8 @@
 # Power Detector
 
-LimePSB RPCM v1.4 board features on board RF signal power detectors for transmit channels. Measured values may be read using provided script. 
+LimePSB RPCM v1.4 board features on board RF signal power detectors for transmit channels. Measured values may be read using provided script.
+
+**Note:** This is compatible with both Raspberry Pi CM4 (BCM2711) and CM5 (BCM2712). The script automatically detects and loads the appropriate SPI driver (spi_bcm2835 for CM4 or spi_rp1 for CM5).
 
 ## Prerequisites
 

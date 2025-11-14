@@ -1,0 +1,135 @@
+===============================================================================
+INSTALLATION STEPS FOR LimePSB-RPCM v1.4 ON RASPBERRY PI CM5
+===============================================================================
+
+These commands must be run on your ACTUAL Raspberry Pi CM5 hardware.
+
+METHOD 1: AUTOMATED INSTALLATION
+===============================================================================
+
+1. Clone repository on your CM5:
+   cd ~
+   git clone https://github.com/cvalentine99/LimePSB-RPCM_BSP.git
+   cd LimePSB-RPCM_BSP/LimePSB-RPCM_1v4
+
+2. Run the installation script:
+   sudo bash install_on_cm5.sh
+
+3. Reboot when prompted
+
+
+METHOD 2: MANUAL STEP-BY-STEP
+===============================================================================
+
+cd ~/LimePSB-RPCM_BSP/LimePSB-RPCM_1v4
+
+# Step 1: GPIO Expander
+cd gpio_expander
+dtc -@ -I dts -O dtb -o mcp23017_LimePSB-RPCM.dtbo mcp23017_LimePSB-RPCM.dts
+sudo cp mcp23017_LimePSB-RPCM.dtbo /boot/firmware/overlays/
+
+# Step 2: System ADC
+cd ../system_adc
+dtc -@ -I dts -O dtb -o mcp3208.dtbo mcp3208.dts
+sudo cp mcp3208.dtbo /boot/firmware/overlays/
+
+# Step 3: FPGA Configuration
+cd ../fpga_configuration
+sudo make install
+
+# Step 4: Update config.txt
+sudo bash -c 'cat >> /boot/firmware/config.txt << EOF
+
+# LimePSB-RPCM v1.4 Configuration
+dtoverlay=mcp23017_LimePSB-RPCM,noints,i2c_csi_dsi
+dtoverlay=spi0-0cs
+dtoverlay=spi1-3cs,cs0_pin=18,cs1_pin=17,cs2_pin=16
+dtoverlay=mcp3208,spi1-0-present
+dtoverlay=i2c-sensor,lm75,addr=0x48
+dtoverlay=i2c-rtc,pcf85063a,i2c_csi_dsi
+EOF
+'
+
+# Step 5: Setup FPGA auto-configuration
+(sudo crontab -l 2>/dev/null; echo "@reboot sudo bash /usr/local/bin/fpga_conf.sh /usr/local/bin/LimePSB_RPCM_top_bitmap.bin") | sudo crontab -
+
+# Step 6: Reboot
+sudo reboot
+
+
+VERIFICATION AFTER REBOOT
+===============================================================================
+
+# Check GPIO chips (should see mcp23017 chips)
+gpiodetect
+
+# Check named GPIO pins
+gpioinfo gpiochip5    # MCP23017 #1: LED1_R, EN_TXA_PA, etc.
+gpioinfo gpiochip6    # MCP23017 #2: FPGA_CRESET, RFPD_EN, etc.
+
+# Check SPI driver (should show spi_rp1 for CM5)
+lsmod | grep spi
+ls /dev/spidev*
+
+# Check I2C devices (should see 0x20, 0x21, 0x48)
+sudo i2cdetect -y 10
+
+# Read temperature sensor
+cat /sys/class/hwmon/hwmon*/temp1_input
+
+# Test power detector
+cd ~/LimePSB-RPCM_BSP/LimePSB-RPCM_1v4/power_detector
+sudo ./pdread.sh
+
+
+EXPECTED GPIO OUTPUT ON CM5
+===============================================================================
+
+After installation, gpiodetect should show:
+
+gpiochip0 [gpio-brcmstb@107d508500] (32 lines)
+gpiochip1 [gpio-brcmstb@107d508520] (4 lines)
+gpiochip2 [gpio-brcmstb@107d517c00] (15 lines)
+gpiochip3 [gpio-brcmstb@107d517c20] (6 lines)
+gpiochip4 [pinctrl-rp1] (54 lines)        ← CM5 main GPIO
+gpiochip5 [mcp23017] (16 lines)           ← GPIO expander 0x20
+gpiochip6 [mcp23017] (16 lines)           ← GPIO expander 0x21
+
+
+TROUBLESHOOTING
+===============================================================================
+
+If MCP23017 chips don't appear:
+
+1. Check I2C bus for devices:
+   sudo i2cdetect -y 10
+   sudo i2cdetect -y 11
+   (Look for addresses 0x20 and 0x21)
+
+2. Check kernel messages:
+   sudo dmesg | grep mcp23017
+   sudo dmesg | grep i2c
+
+3. Verify config.txt:
+   cat /boot/firmware/config.txt | grep mcp23017
+
+4. Check overlay was copied:
+   ls -l /boot/firmware/overlays/mcp23017_LimePSB-RPCM.dtbo
+
+If SPI doesn't work:
+
+1. Load driver manually:
+   sudo modprobe spi_rp1
+
+2. Check kernel messages:
+   sudo dmesg | grep spi
+
+
+ADDITIONAL RESOURCES
+===============================================================================
+
+- Full installation guide: ../INSTALL_CM5.md
+- Command reference: COMMANDS_CM5.md
+- Component documentation: See README.md in each subdirectory
+
+===============================================================================

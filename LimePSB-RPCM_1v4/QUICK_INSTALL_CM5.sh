@@ -25,7 +25,9 @@ BASE_DIR="$(dirname "$SCRIPT_DIR")"
 
 echo "[1/9] Installing prerequisite packages..."
 apt update
-apt install -y device-tree-compiler gpiod libgpiod-dev xxd git
+# Include autotools toolchain and toolchain helpers so spi-tools can be built from source
+apt install -y device-tree-compiler gpiod libgpiod-dev xxd git \
+    autoconf automake libtool pkg-config build-essential
 
 echo ""
 echo "[2/9] Installing spi-tools..."
